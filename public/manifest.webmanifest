@@ -1,0 +1,19 @@
+{
+  "name": "iLeadGen - Lead Generation Platform",
+  "short_name": "iLeadGen",
+  "description": "B2B lead generation and outreach automation platform",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F9FAFB",
+  "theme_color": "#0ea5e9",
+  "lang": "en",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

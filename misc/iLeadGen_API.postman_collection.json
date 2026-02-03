@@ -1,0 +1,1149 @@
+{
+  "info": {
+    "_postman_id": "ileadgen-api-collection",
+    "name": "iLeadGen API",
+    "description": "Lead generation and outreach automation API.\n\n## Authentication\nMost endpoints require a Bearer token. Use the Login endpoint to get tokens, then set the `access_token` environment variable.\n\n## Workflow\n1. Register/Login to get tokens\n2. Create a campaign with target configuration\n3. Run the pipeline (collect → enrich → score)\n4. Review leads and run outreach\n5. Monitor events for responses",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api/v1",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/../health",
+              "host": ["{{base_url}}"],
+              "path": ["..", "health"]
+            },
+            "description": "Check if the API is running."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "http://localhost:8000/health"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"status\": \"healthy\",\n  \"service\": \"iLeadGen API\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set('user_id', jsonData.id);",
+                  "    pm.environment.set('user_email', jsonData.email);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"securepassword123\",\n  \"full_name\": \"John Doe\",\n  \"company_name\": \"Acme Corp\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Register a new user account."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"id\": 1,\n  \"email\": \"user@example.com\",\n  \"full_name\": \"John Doe\",\n  \"company_name\": \"Acme Corp\",\n  \"is_active\": true,\n  \"is_verified\": false,\n  \"created_at\": \"2024-01-15T10:30:00Z\"\n}"
+            },
+            {
+              "name": "Email Already Exists",
+              "status": "Bad Request",
+              "code": 400,
+              "body": "{\n  \"detail\": \"Email already registered\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set('access_token', jsonData.access_token);",
+                  "    pm.environment.set('refresh_token', jsonData.refresh_token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"securepassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Authenticate and get access/refresh tokens."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"access_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n  \"refresh_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n  \"token_type\": \"bearer\"\n}"
+            },
+            {
+              "name": "Invalid Credentials",
+              "status": "Unauthorized",
+              "code": 401,
+              "body": "{\n  \"detail\": \"Invalid email or password\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set('access_token', jsonData.access_token);",
+                  "    pm.environment.set('refresh_token', jsonData.refresh_token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/refresh",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "refresh"]
+            },
+            "description": "Get new tokens using refresh token."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"access_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n  \"refresh_token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n  \"token_type\": \"bearer\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me"]
+            },
+            "description": "Get current authenticated user profile."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": 1,\n  \"email\": \"user@example.com\",\n  \"full_name\": \"John Doe\",\n  \"company_name\": \"Acme Corp\",\n  \"is_active\": true,\n  \"is_verified\": false,\n  \"created_at\": \"2024-01-15T10:30:00Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Current User",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"John Smith\",\n  \"company_name\": \"New Company Inc\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me"]
+            },
+            "description": "Update current user profile."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": 1,\n  \"email\": \"user@example.com\",\n  \"full_name\": \"John Smith\",\n  \"company_name\": \"New Company Inc\",\n  \"is_active\": true,\n  \"is_verified\": false,\n  \"created_at\": \"2024-01-15T10:30:00Z\"\n}"
+            }
+          ]
+        }
+      ],
+      "description": "User authentication and profile management."
+    },
+    {
+      "name": "Campaigns",
+      "item": [
+        {
+          "name": "Create Campaign",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set('campaign_id', jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Q1 Healthcare Campaign\",\n  \"description\": \"Target hospitals and clinics in Lagos for our healthcare software\",\n  \"industry\": \"healthcare\",\n  \"product_type\": \"software\",\n  \"target_market\": {\n    \"geography\": {\n      \"countries\": [\"Nigeria\"],\n      \"regions\": [\"Lagos\", \"Abuja\"],\n      \"cities\": [\"Lagos\", \"Ikeja\", \"Victoria Island\"],\n      \"urban_preference\": \"urban_and_semi_urban\"\n    },\n    \"business_profile\": {\n      \"types\": [\"hospital\", \"clinic\", \"medical center\"],\n      \"size_indicators\": {\n        \"metric\": \"employees\",\n        \"ideal_range\": [20, 500],\n        \"minimum\": 10\n      },\n      \"age_preference\": {\n        \"ideal_years\": [3, 20]\n      }\n    }\n  },\n  \"icp_scoring\": {\n    \"weights\": {\n      \"firmographic\": 0.40,\n      \"digital_readiness\": 0.30,\n      \"engagement\": 0.20,\n      \"pain_points\": 0.10\n    },\n    \"pain_point_keywords\": [\n      {\n        \"category\": \"efficiency\",\n        \"keywords\": [\"slow\", \"manual\", \"paperwork\", \"delays\"],\n        \"relevance\": \"high\"\n      },\n      {\n        \"category\": \"technology\",\n        \"keywords\": [\"outdated\", \"old system\", \"upgrade\"],\n        \"relevance\": \"high\"\n      }\n    ],\n    \"tier_thresholds\": {\n      \"A\": 80,\n      \"B\": 60,\n      \"C\": 40,\n      \"D\": 0\n    }\n  },\n  \"data_sources\": {\n    \"google_maps\": {\n      \"enabled\": true,\n      \"use_api\": true,\n      \"search_queries\": [\n        \"hospital in {city}\",\n        \"clinic in {city}\",\n        \"medical center in {city}\"\n      ],\n      \"max_results_per_query\": 20\n    },\n    \"csv_import\": {\n      \"enabled\": false,\n      \"field_mapping\": {}\n    },\n    \"hunter_io\": {\n      \"enabled\": false,\n      \"find_emails\": true,\n      \"verify_emails\": false\n    }\n  },\n  \"outreach_config\": {\n    \"email\": {\n      \"send_mode\": \"draft\",\n      \"daily_limit\": 50,\n      \"delay_between_sends\": 60,\n      \"sequences\": {\n        \"a_tier\": [\n          {\"template\": \"initial_outreach\", \"delay_days\": 0},\n          {\"template\": \"follow_up_value\", \"delay_days\": 3},\n          {\"template\": \"case_study\", \"delay_days\": 7},\n          {\"template\": \"soft_close\", \"delay_days\": 14}\n        ],\n        \"b_tier\": [\n          {\"template\": \"initial_outreach\", \"delay_days\": 0},\n          {\"template\": \"follow_up_value\", \"delay_days\": 5},\n          {\"template\": \"soft_close\", \"delay_days\": 12}\n        ],\n        \"c_tier\": [\n          {\"template\": \"initial_outreach\", \"delay_days\": 0},\n          {\"template\": \"soft_close\", \"delay_days\": 10}\n        ]\n      }\n    }\n  },\n  \"personalization\": {\n    \"company_name\": \"MedTech Solutions\",\n    \"product_name\": \"HospitalOS\",\n    \"value_propositions\": [\n      \"Reduce administrative time by 50%\",\n      \"Improve patient record accuracy\",\n      \"Seamless integration with existing systems\"\n    ],\n    \"sender_signature\": \"Best regards,\\nJohn Doe\\nMedTech Solutions\\njohn@medtech.com\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/campaigns/",
+              "host": ["{{base_url}}"],
+              "path": ["campaigns", ""]
+            },
+            "description": "Create a new lead generation campaign with full configuration."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"id\": 1,\n  \"user_id\": 1,\n  \"name\": \"Q1 Healthcare Campaign\",\n  \"description\": \"Target hospitals and clinics in Lagos\",\n  \"industry\": \"healthcare\",\n  \"product_type\": \"software\",\n  \"status\": \"draft\",\n  \"target_market\": {...},\n  \"icp_scoring\": {...},\n  \"data_sources\": {...},\n  \"outreach_config\": {...},\n  \"personalization\": {...},\n  \"total_leads\": 0,\n  \"leads_contacted\": 0,\n  \"leads_responded\": 0,\n  \"leads_qualified\": 0,\n  \"leads_converted\": 0,\n  \"current_task_id\": null,\n  \"last_error\": null,\n  \"created_at\": \"2024-01-15T10:30:00Z\",\n  \"updated_at\": \"2024-01-15T10:30:00Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "List Campaigns",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/campaigns/?skip=0&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["campaigns", ""],
+              "query": [
+                {
+                  "key": "skip",
+                  "value": "0"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "status_filter",
+                  "value": "draft",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List all campaigns for the current user."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "[\n  {\n    \"id\": 1,\n    \"name\": \"Q1 Healthcare Campaign\",\n    \"industry\": \"healthcare\",\n    \"status\": \"draft\",\n    \"total_leads\": 0,\n    \"leads_contacted\": 0,\n    \"leads_responded\": 0,\n    \"created_at\": \"2024-01-15T10:30:00Z\"\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Get Campaign",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/campaigns/{{campaign_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["campaigns", "{{campaign_id}}"]
+            },
+            "description": "Get a specific campaign by ID with full details."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": 1,\n  \"user_id\": 1,\n  \"name\": \"Q1 Healthcare Campaign\",\n  \"description\": \"Target hospitals and clinics in Lagos\",\n  \"industry\": \"healthcare\",\n  \"status\": \"draft\",\n  \"target_market\": {...},\n  \"total_leads\": 152,\n  \"leads_contacted\": 45,\n  \"leads_responded\": 12,\n  \"created_at\": \"2024-01-15T10:30:00Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Campaign",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Q1 Healthcare Campaign - Updated\",\n  \"description\": \"Updated description\",\n  \"personalization\": {\n    \"company_name\": \"MedTech Solutions\",\n    \"product_name\": \"HospitalOS Pro\",\n    \"value_propositions\": [\n      \"Reduce administrative time by 60%\",\n      \"AI-powered patient insights\"\n    ]\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/campaigns/{{campaign_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["campaigns", "{{campaign_id}}"]
+            },
+            "description": "Update campaign settings."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": 1,\n  \"name\": \"Q1 Healthcare Campaign - Updated\",\n  \"description\": \"Updated description\",\n  ...\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Campaign",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/campaigns/{{campaign_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["campaigns", "{{campaign_id}}"]
+            },
+            "description": "Delete a campaign and all its leads."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "No Content",
+              "code": 204,
+              "body": ""
+            }
+          ]
+        },
+        {
+          "name": "Get Campaign Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/campaigns/{{campaign_id}}/stats",
+              "host": ["{{base_url}}"],
+              "path": ["campaigns", "{{campaign_id}}", "stats"]
+            },
+            "description": "Get detailed statistics for a campaign."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"campaign_id\": 1,\n  \"total_leads\": 152,\n  \"leads_contacted\": 45,\n  \"leads_responded\": 12,\n  \"leads_qualified\": 8,\n  \"leads_converted\": 3,\n  \"tier_distribution\": {\n    \"A\": 15,\n    \"B\": 42,\n    \"C\": 68,\n    \"D\": 27\n  },\n  \"status_distribution\": {\n    \"new\": 50,\n    \"enriched\": 30,\n    \"scored\": 27,\n    \"contacted\": 33,\n    \"responded\": 12\n  },\n  \"average_score\": 52.3,\n  \"status\": \"ready\",\n  \"current_task_id\": null,\n  \"last_error\": null\n}"
+            }
+          ]
+        }
+      ],
+      "description": "Campaign management endpoints."
+    },
+    {
+      "name": "Leads",
+      "item": [
+        {
+          "name": "List Leads",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/campaigns/{{campaign_id}}/leads/?skip=0&limit=50",
+              "host": ["{{base_url}}"],
+              "path": ["campaigns", "{{campaign_id}}", "leads", ""],
+              "query": [
+                {
+                  "key": "skip",
+                  "value": "0"
+                },
+                {
+                  "key": "limit",
+                  "value": "50"
+                },
+                {
+                  "key": "tier",
+                  "value": "A",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "scored",
+                  "disabled": true
+                },
+                {
+                  "key": "min_score",
+                  "value": "60",
+                  "disabled": true
+                },
+                {
+                  "key": "city",
+                  "value": "Lagos",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List leads for a campaign with optional filters."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "[\n  {\n    \"id\": 1,\n    \"business_name\": \"Lagos General Hospital\",\n    \"business_type\": \"hospital\",\n    \"city\": \"Lagos\",\n    \"state\": \"Lagos\",\n    \"total_score\": 78.5,\n    \"tier\": \"B\",\n    \"status\": \"scored\",\n    \"contact_info\": {\n      \"primary_email\": \"info@lagosgeneral.com\",\n      \"primary_phone\": \"+234801234567\"\n    },\n    \"created_at\": \"2024-01-15T10:30:00Z\"\n  }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Create Lead (Manual)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set('lead_id', jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"business_name\": \"Sample Hospital\",\n  \"business_type\": \"hospital\",\n  \"industry\": \"healthcare\",\n  \"address\": \"123 Medical Street\",\n  \"city\": \"Lagos\",\n  \"state\": \"Lagos\",\n  \"country\": \"Nigeria\",\n  \"postal_code\": \"100001\",\n  \"size_metric\": \"employees\",\n  \"size_value\": 150,\n  \"contact_info\": {\n    \"primary_email\": \"info@samplehospital.com\",\n    \"primary_phone\": \"+234801234567\",\n    \"contact_name\": \"Dr. Adebayo\",\n    \"contact_title\": \"Medical Director\"\n  },\n  \"source\": \"manual\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/campaigns/{{campaign_id}}/leads/",
+              "host": ["{{base_url}}"],
+              "path": ["campaigns", "{{campaign_id}}", "leads", ""]
+            },
+            "description": "Manually create a lead in a campaign."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"id\": 1,\n  \"campaign_id\": 1,\n  \"source\": \"manual\",\n  \"business_name\": \"Sample Hospital\",\n  \"business_type\": \"hospital\",\n  \"city\": \"Lagos\",\n  \"status\": \"new\",\n  ...\n}"
+            }
+          ]
+        },
+        {
+          "name": "Bulk Import Leads",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"leads\": [\n    {\n      \"business_name\": \"Hospital A\",\n      \"business_type\": \"hospital\",\n      \"city\": \"Lagos\",\n      \"contact_info\": {\n        \"primary_email\": \"info@hospitala.com\"\n      }\n    },\n    {\n      \"business_name\": \"Clinic B\",\n      \"business_type\": \"clinic\",\n      \"city\": \"Abuja\",\n      \"contact_info\": {\n        \"primary_email\": \"contact@clinicb.com\"\n      }\n    },\n    {\n      \"business_name\": \"Medical Center C\",\n      \"business_type\": \"medical center\",\n      \"city\": \"Port Harcourt\",\n      \"contact_info\": {\n        \"primary_phone\": \"+234809876543\"\n      }\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/campaigns/{{campaign_id}}/leads/import",
+              "host": ["{{base_url}}"],
+              "path": ["campaigns", "{{campaign_id}}", "leads", "import"]
+            },
+            "description": "Bulk import leads from JSON data."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"imported\": 3,\n  \"duplicates\": 0,\n  \"errors\": []\n}"
+            },
+            {
+              "name": "Partial Success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"imported\": 2,\n  \"duplicates\": 1,\n  \"errors\": []\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Lead",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/campaigns/{{campaign_id}}/leads/{{lead_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["campaigns", "{{campaign_id}}", "leads", "{{lead_id}}"]
+            },
+            "description": "Get full details for a specific lead."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": 1,\n  \"campaign_id\": 1,\n  \"source\": \"google_maps\",\n  \"business_name\": \"Lagos General Hospital\",\n  \"business_type\": \"hospital\",\n  \"industry\": \"healthcare\",\n  \"address\": \"45 Herbert Macaulay Way, Yaba\",\n  \"city\": \"Lagos\",\n  \"state\": \"Lagos\",\n  \"country\": \"Nigeria\",\n  \"postal_code\": \"100001\",\n  \"latitude\": 6.5158,\n  \"longitude\": 3.3849,\n  \"size_metric\": \"employees\",\n  \"size_value\": 200,\n  \"contact_info\": {\n    \"primary_email\": \"info@lagosgeneral.com\",\n    \"secondary_emails\": [\"admin@lagosgeneral.com\"],\n    \"primary_phone\": \"+234801234567\",\n    \"contact_name\": \"Dr. Adebayo\",\n    \"contact_title\": \"Medical Director\"\n  },\n  \"digital_signals\": {\n    \"has_website\": true,\n    \"website_url\": \"https://lagosgeneral.com\",\n    \"has_social_media\": true,\n    \"social_media_urls\": {\n      \"facebook\": \"https://facebook.com/lagosgeneral\",\n      \"linkedin\": \"https://linkedin.com/company/lagosgeneral\"\n    },\n    \"has_online_booking\": true,\n    \"has_digital_payments\": false,\n    \"technology_mentions\": [\"wordpress\"]\n  },\n  \"engagement_signals\": {\n    \"review_count\": 156,\n    \"average_rating\": 4.3,\n    \"recent_review_count\": 12,\n    \"growth_indicators\": [\"expanding\"]\n  },\n  \"pain_points\": {\n    \"categories\": {\n      \"efficiency\": [\"long wait times\", \"manual paperwork\"]\n    },\n    \"keywords_found\": [\"slow\", \"manual\", \"paperwork\"],\n    \"raw_complaints\": [\"The registration process takes too long\"],\n    \"relevance_score\": 65.0\n  },\n  \"icp_score\": {\n    \"total_score\": 78.5,\n    \"firmographic_score\": 32.0,\n    \"digital_readiness_score\": 21.0,\n    \"engagement_score\": 18.0,\n    \"pain_point_score\": 7.5,\n    \"tier\": \"B\",\n    \"scoring_rationale\": \"Strong firmographic fit, digitally mature, active customer base (156 reviews), strong pain point alignment.\",\n    \"scored_at\": \"2024-01-15T11:00:00Z\"\n  },\n  \"total_score\": 78.5,\n  \"tier\": \"B\",\n  \"status\": \"scored\",\n  \"outreach_history\": [],\n  \"created_at\": \"2024-01-15T10:30:00Z\",\n  \"updated_at\": \"2024-01-15T11:00:00Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Lead",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"business_name\": \"Lagos General Hospital - Main Branch\",\n  \"contact_info\": {\n    \"primary_email\": \"director@lagosgeneral.com\",\n    \"contact_name\": \"Dr. Adeola Adebayo\",\n    \"contact_title\": \"Chief Medical Director\"\n  },\n  \"status\": \"qualified\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/campaigns/{{campaign_id}}/leads/{{lead_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["campaigns", "{{campaign_id}}", "leads", "{{lead_id}}"]
+            },
+            "description": "Update lead information or status."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": 1,\n  \"business_name\": \"Lagos General Hospital - Main Branch\",\n  \"status\": \"qualified\",\n  ...\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Lead",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/campaigns/{{campaign_id}}/leads/{{lead_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["campaigns", "{{campaign_id}}", "leads", "{{lead_id}}"]
+            },
+            "description": "Delete a lead from a campaign."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "No Content",
+              "code": 204,
+              "body": ""
+            }
+          ]
+        },
+        {
+          "name": "Get Lead Events",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/campaigns/{{campaign_id}}/leads/{{lead_id}}/events?skip=0&limit=50",
+              "host": ["{{base_url}}"],
+              "path": ["campaigns", "{{campaign_id}}", "leads", "{{lead_id}}", "events"],
+              "query": [
+                {
+                  "key": "skip",
+                  "value": "0"
+                },
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            },
+            "description": "Get activity events for a lead (emails sent, opened, replied, etc.)."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "[\n  {\n    \"id\": 1,\n    \"lead_id\": 1,\n    \"event_type\": \"email_sent\",\n    \"channel\": \"email\",\n    \"event_data\": {\n      \"template\": \"initial_outreach\",\n      \"subject\": \"Quick question about Lagos General Hospital\",\n      \"to\": \"info@lagosgeneral.com\"\n    },\n    \"created_at\": \"2024-01-16T09:00:00Z\"\n  },\n  {\n    \"id\": 2,\n    \"lead_id\": 1,\n    \"event_type\": \"email_opened\",\n    \"channel\": \"email\",\n    \"event_data\": {\n      \"message_id\": \"sg-abc123\"\n    },\n    \"created_at\": \"2024-01-16T10:30:00Z\"\n  }\n]"
+            }
+          ]
+        }
+      ],
+      "description": "Lead management endpoints."
+    },
+    {
+      "name": "Pipeline",
+      "item": [
+        {
+          "name": "Start Collection",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/campaigns/{{campaign_id}}/pipeline/collect",
+              "host": ["{{base_url}}"],
+              "path": ["campaigns", "{{campaign_id}}", "pipeline", "collect"]
+            },
+            "description": "Start lead collection from configured data sources (Google Maps, etc.)."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"task_id\": \"abc123-def456\",\n  \"status\": \"started\",\n  \"message\": \"Lead collection task started\"\n}"
+            },
+            {
+              "name": "Task Already Running",
+              "status": "Conflict",
+              "code": 409,
+              "body": "{\n  \"detail\": \"A task is already running for this campaign\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Start Enrichment",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/campaigns/{{campaign_id}}/pipeline/enrich",
+              "host": ["{{base_url}}"],
+              "path": ["campaigns", "{{campaign_id}}", "pipeline", "enrich"]
+            },
+            "description": "Start lead enrichment (find contacts, analyze digital signals)."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"task_id\": \"abc123-def456\",\n  \"status\": \"started\",\n  \"message\": \"Lead enrichment task started\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Start Scoring",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/campaigns/{{campaign_id}}/pipeline/score",
+              "host": ["{{base_url}}"],
+              "path": ["campaigns", "{{campaign_id}}", "pipeline", "score"]
+            },
+            "description": "Start ICP scoring for all leads."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"task_id\": \"abc123-def456\",\n  \"status\": \"started\",\n  \"message\": \"Lead scoring task started\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Run Full Pipeline",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/campaigns/{{campaign_id}}/pipeline/run",
+              "host": ["{{base_url}}"],
+              "path": ["campaigns", "{{campaign_id}}", "pipeline", "run"]
+            },
+            "description": "Run the complete pipeline: collect → enrich → score."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"task_id\": \"abc123-def456\",\n  \"status\": \"started\",\n  \"message\": \"Full pipeline started (collect -> enrich -> score)\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Pipeline Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/campaigns/{{campaign_id}}/pipeline/status",
+              "host": ["{{base_url}}"],
+              "path": ["campaigns", "{{campaign_id}}", "pipeline", "status"]
+            },
+            "description": "Get current pipeline status for a campaign."
+          },
+          "response": [
+            {
+              "name": "Task Running",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"task_id\": \"abc123-def456\",\n  \"status\": \"PENDING\",\n  \"result\": null,\n  \"error\": null\n}"
+            },
+            {
+              "name": "Task Complete",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"task_id\": \"abc123-def456\",\n  \"status\": \"SUCCESS\",\n  \"result\": {\n    \"campaign_id\": 1,\n    \"leads_collected\": 152,\n    \"status\": \"completed\"\n  },\n  \"error\": null\n}"
+            },
+            {
+              "name": "No Task Running",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"task_id\": \"\",\n  \"status\": \"ready\",\n  \"result\": {\n    \"message\": \"No task currently running\"\n  },\n  \"error\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Task Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/campaigns/{{campaign_id}}/pipeline/task/{{task_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["campaigns", "{{campaign_id}}", "pipeline", "task", "{{task_id}}"]
+            },
+            "description": "Get status of a specific task by ID."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"task_id\": \"abc123-def456\",\n  \"status\": \"SUCCESS\",\n  \"result\": {\n    \"campaign_id\": 1,\n    \"leads_collected\": 152\n  },\n  \"error\": null\n}"
+            }
+          ]
+        }
+      ],
+      "description": "Pipeline execution endpoints for running lead generation tasks."
+    },
+    {
+      "name": "Outreach",
+      "item": [
+        {
+          "name": "List Templates",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/campaigns/{{campaign_id}}/outreach/templates",
+              "host": ["{{base_url}}"],
+              "path": ["campaigns", "{{campaign_id}}", "outreach", "templates"]
+            },
+            "description": "List available email templates."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"templates\": [\n    {\n      \"name\": \"initial_outreach\",\n      \"subject\": \"Quick question about {business_name}\",\n      \"body_preview\": \"Hi {contact_name},\\n\\nI noticed {business_name} and wanted to reach out....\"\n    },\n    {\n      \"name\": \"follow_up_value\",\n      \"subject\": \"Following up - {business_name}\",\n      \"body_preview\": \"Hi {contact_name},\\n\\nI wanted to follow up on my previous message....\"\n    },\n    {\n      \"name\": \"case_study\",\n      \"subject\": \"How {similar_company} achieved results\",\n      \"body_preview\": \"Hi {contact_name},\\n\\nI thought you might find this interesting....\"\n    },\n    {\n      \"name\": \"soft_close\",\n      \"subject\": \"Last check-in - {business_name}\",\n      \"body_preview\": \"Hi {contact_name},\\n\\nI wanted to send one final note....\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Sequences",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/campaigns/{{campaign_id}}/outreach/sequences",
+              "host": ["{{base_url}}"],
+              "path": ["campaigns", "{{campaign_id}}", "outreach", "sequences"]
+            },
+            "description": "Get email sequences for each lead tier."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"a_tier\": [\n    {\"template\": \"initial_outreach\", \"delay_days\": 0},\n    {\"template\": \"follow_up_value\", \"delay_days\": 3},\n    {\"template\": \"case_study\", \"delay_days\": 7},\n    {\"template\": \"soft_close\", \"delay_days\": 14}\n  ],\n  \"b_tier\": [\n    {\"template\": \"initial_outreach\", \"delay_days\": 0},\n    {\"template\": \"follow_up_value\", \"delay_days\": 5},\n    {\"template\": \"soft_close\", \"delay_days\": 12}\n  ],\n  \"c_tier\": [\n    {\"template\": \"initial_outreach\", \"delay_days\": 0},\n    {\"template\": \"soft_close\", \"delay_days\": 10}\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Preview Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lead_id\": {{lead_id}},\n  \"template_name\": \"initial_outreach\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/campaigns/{{campaign_id}}/outreach/preview",
+              "host": ["{{base_url}}"],
+              "path": ["campaigns", "{{campaign_id}}", "outreach", "preview"]
+            },
+            "description": "Preview a personalized email before sending."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"to_email\": \"info@lagosgeneral.com\",\n  \"subject\": \"Quick question about Lagos General Hospital\",\n  \"body\": \"Hi Dr. Adebayo,\\n\\nI noticed Lagos General Hospital and wanted to reach out.\\n\\nReduce administrative time by 50%\\n\\nWould you be open to a brief conversation about how we might help?\\n\\nBest regards,\\nJohn Doe\\nMedTech Solutions\\njohn@medtech.com\",\n  \"template_name\": \"initial_outreach\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Send Single Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lead_id\": {{lead_id}},\n  \"template_name\": \"initial_outreach\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/campaigns/{{campaign_id}}/outreach/send",
+              "host": ["{{base_url}}"],
+              "path": ["campaigns", "{{campaign_id}}", "outreach", "send"]
+            },
+            "description": "Send a single email to a specific lead."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"task_id\": \"abc123-def456\",\n  \"status\": \"started\",\n  \"message\": \"Sending email to info@lagosgeneral.com\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Run Outreach Sequence",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tier\": \"A\",\n  \"limit\": 50\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/campaigns/{{campaign_id}}/outreach/run-sequence",
+              "host": ["{{base_url}}"],
+              "path": ["campaigns", "{{campaign_id}}", "outreach", "run-sequence"]
+            },
+            "description": "Run email outreach sequence for leads. Can filter by tier."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"task_id\": \"abc123-def456\",\n  \"status\": \"started\",\n  \"message\": \"Running outreach sequence (tier=A, limit=50)\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Outreach Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/campaigns/{{campaign_id}}/outreach/stats",
+              "host": ["{{base_url}}"],
+              "path": ["campaigns", "{{campaign_id}}", "outreach", "stats"]
+            },
+            "description": "Get outreach statistics for a campaign."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"campaign_id\": 1,\n  \"total_leads\": 152,\n  \"leads_with_email\": 98,\n  \"leads_contacted\": 45,\n  \"leads_responded\": 12,\n  \"leads_qualified\": 8,\n  \"leads_converted\": 3,\n  \"status_breakdown\": {\n    \"new\": 50,\n    \"enriched\": 30,\n    \"scored\": 27,\n    \"contacted\": 33,\n    \"responded\": 12\n  }\n}"
+            }
+          ]
+        }
+      ],
+      "description": "Email outreach and campaign management."
+    },
+    {
+      "name": "Webhooks",
+      "item": [
+        {
+          "name": "SendGrid Webhook",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "[\n  {\n    \"email\": \"info@lagosgeneral.com\",\n    \"event\": \"delivered\",\n    \"timestamp\": 1705312800,\n    \"sg_message_id\": \"abc123\",\n    \"sg_event_id\": \"event456\"\n  },\n  {\n    \"email\": \"info@lagosgeneral.com\",\n    \"event\": \"open\",\n    \"timestamp\": 1705316400,\n    \"sg_message_id\": \"abc123\",\n    \"sg_event_id\": \"event789\"\n  }\n]"
+            },
+            "url": {
+              "raw": "{{base_url}}/webhooks/sendgrid",
+              "host": ["{{base_url}}"],
+              "path": ["webhooks", "sendgrid"]
+            },
+            "description": "Webhook endpoint for SendGrid email events. Configure this URL in your SendGrid Event Webhook settings."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"processed\": 2,\n  \"total\": 2\n}"
+            }
+          ]
+        },
+        {
+          "name": "Generic Webhook",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"info@lagosgeneral.com\",\n  \"event_type\": \"email_replied\",\n  \"lead_id\": 1,\n  \"response_content\": \"Thanks for reaching out, I'm interested in learning more.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/webhooks/generic/custom",
+              "host": ["{{base_url}}"],
+              "path": ["webhooks", "generic", "custom"]
+            },
+            "description": "Generic webhook endpoint for custom integrations."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"status\": \"accepted\",\n  \"lead_id\": 1\n}"
+            }
+          ]
+        }
+      ],
+      "description": "Webhook endpoints for receiving external events."
+    },
+    {
+      "name": "Events",
+      "item": [
+        {
+          "name": "Event Stream (SSE)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "text/event-stream"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/events/stream?campaign_id={{campaign_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["events", "stream"],
+              "query": [
+                {
+                  "key": "campaign_id",
+                  "value": "{{campaign_id}}",
+                  "description": "Optional: filter to specific campaign"
+                }
+              ]
+            },
+            "description": "Server-Sent Events endpoint for real-time notifications. Keep connection open to receive events as they occur.\n\nNote: This is a streaming endpoint. In Postman, you'll see events arrive in real-time."
+          },
+          "response": [
+            {
+              "name": "SSE Stream",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "text/event-stream"
+                }
+              ],
+              "body": "id: 1\nevent: email_sent\ndata: {\"id\": 1, \"lead_id\": 1, \"event_type\": \"email_sent\", \"channel\": \"email\", \"event_data\": {...}, \"created_at\": \"2024-01-16T09:00:00Z\"}\n\nid: 2\nevent: email_opened\ndata: {\"id\": 2, \"lead_id\": 1, \"event_type\": \"email_opened\", \"channel\": \"email\", \"event_data\": {...}, \"created_at\": \"2024-01-16T10:30:00Z\"}\n\n: heartbeat\n"
+            }
+          ]
+        },
+        {
+          "name": "Get Recent Events",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/events/recent?limit=50&campaign_id={{campaign_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["events", "recent"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50"
+                },
+                {
+                  "key": "campaign_id",
+                  "value": "{{campaign_id}}",
+                  "description": "Optional: filter to specific campaign"
+                }
+              ]
+            },
+            "description": "Get recent events via polling (alternative to SSE)."
+          },
+          "response": [
+            {
+              "name": "Success",
+              "status": "OK",
+              "code": 200,
+              "body": "[\n  {\n    \"id\": 2,\n    \"lead_id\": 1,\n    \"event_type\": \"email_opened\",\n    \"channel\": \"email\",\n    \"event_data\": {\n      \"message_id\": \"sg-abc123\"\n    },\n    \"created_at\": \"2024-01-16T10:30:00Z\"\n  },\n  {\n    \"id\": 1,\n    \"lead_id\": 1,\n    \"event_type\": \"email_sent\",\n    \"channel\": \"email\",\n    \"event_data\": {\n      \"template\": \"initial_outreach\",\n      \"subject\": \"Quick question about Lagos General Hospital\"\n    },\n    \"created_at\": \"2024-01-16T09:00:00Z\"\n  }\n]"
+            }
+          ]
+        }
+      ],
+      "description": "Real-time event streaming and polling endpoints."
+    }
+  ]
+}

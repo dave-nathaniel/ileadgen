@@ -1,0 +1,8 @@
+export { default as client } from './client';
+export { default as authApi } from './auth';
+export { default as campaignsApi } from './campaigns';
+export { default as leadsApi } from './leads';
+export { default as pipelineApi } from './pipeline';
+export { default as outreachApi } from './outreach';
+export { default as eventsApi } from './events';
+export { default as aiApi } from './ai';
