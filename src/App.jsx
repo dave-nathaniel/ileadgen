@@ -12,6 +12,7 @@ import {
   CampaignDetail,
   LeadDetail,
   Settings,
+  Billing,
 } from './pages';
 
 const theme = {
@@ -157,6 +158,16 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <LeadDetail />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/billing"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <Billing />
                 </Layout>
               </ProtectedRoute>
             }

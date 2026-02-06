@@ -8,6 +8,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { NotificationDropdown } from '../common/NotificationDropdown';
+import { CreditBalanceChip } from '../billing/CreditBalanceChip';
 
 const { Header: AntHeader } = Layout;
 const { Text } = Typography;
@@ -93,8 +94,9 @@ export function Header() {
         />
       </div>
 
-      {/* Right: Notifications + User */}
+      {/* Right: Credits + Notifications + User */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <CreditBalanceChip />
         <NotificationDropdown />
 
         <Dropdown

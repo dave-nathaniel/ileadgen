@@ -3,6 +3,7 @@ import { Layout, Menu, Button, Typography } from 'antd';
 import {
   DashboardOutlined,
   AimOutlined,
+  WalletOutlined,
   SettingOutlined,
   PlusOutlined,
 } from '@ant-design/icons';
@@ -14,6 +15,7 @@ const { Text } = Typography;
 const navItems = [
   { key: '/dashboard', label: 'Dashboard', icon: <DashboardOutlined /> },
   { key: '/campaigns', label: 'Campaigns', icon: <AimOutlined /> },
+  { key: '/billing', label: 'Billing', icon: <WalletOutlined /> },
   { key: '/settings', label: 'Settings', icon: <SettingOutlined /> },
 ];
 

@@ -21,11 +21,19 @@ client.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor - handle token refresh
+// Response interceptor - handle token refresh and insufficient credits
 client.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+
+    // Handle 402 - Insufficient Credits
+    if (error.response?.status === 402) {
+      window.dispatchEvent(new CustomEvent('insufficient-credits', {
+        detail: error.response.data?.detail,
+      }));
+      return Promise.reject(error);
+    }
 
     // If 401 and we haven't tried refreshing yet
     if (error.response?.status === 401 && !originalRequest._retry) {

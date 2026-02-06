@@ -1,6 +1,7 @@
 import { Layout as AntLayout } from 'antd';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
+import { LowBalanceWarning } from '../billing/LowBalanceWarning';
 
 const { Content } = AntLayout;
 
@@ -18,6 +19,7 @@ export function Layout({ children }) {
           backgroundColor: '#f5f5f5',
         }}>
           <div style={{ maxWidth: 1280, margin: '0 auto', width: '100%' }}>
+            <LowBalanceWarning />
             {children}
           </div>
         </Content>

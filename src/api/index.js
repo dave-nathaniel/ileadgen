@@ -6,3 +6,4 @@ export { default as pipelineApi } from './pipeline';
 export { default as outreachApi } from './outreach';
 export { default as eventsApi } from './events';
 export { default as aiApi } from './ai';
+export { default as billingApi } from './billing';

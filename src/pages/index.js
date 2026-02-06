@@ -7,3 +7,4 @@ export { CampaignEdit } from './CampaignEdit';
 export { CampaignDetail } from './CampaignDetail';
 export { LeadDetail } from './LeadDetail';
 export { Settings } from './Settings';
+export { Billing } from './Billing';

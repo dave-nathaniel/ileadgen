@@ -5,6 +5,7 @@ import App from './App.jsx';
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { AppProvider } from './context/AppContext';
+import { BillingProvider } from './context/BillingContext';
 
 async function enableMocking() {
   if (parseInt(import.meta.env.VITE_ENABLE_MOCKING)) {
@@ -24,9 +25,11 @@ enableMocking().then(() => {
     <StrictMode>
       <ToastProvider>
         <AuthProvider>
-          <AppProvider>
-            <App />
-          </AppProvider>
+          <BillingProvider>
+            <AppProvider>
+              <App />
+            </AppProvider>
+          </BillingProvider>
         </AuthProvider>
       </ToastProvider>
     </StrictMode>
