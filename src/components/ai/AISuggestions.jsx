@@ -8,6 +8,7 @@ import {
   ThunderboltOutlined,
 } from '@ant-design/icons';
 import { aiApi } from '../../api';
+import { useBilling } from '../../context/BillingContext';
 
 const { Text, Paragraph } = Typography;
 
@@ -26,6 +27,7 @@ export function AIKeywordSuggestions({
   const [loading, setLoading] = useState(false);
   const [suggestions, setSuggestions] = useState(null);
   const [selectedKeywords, setSelectedKeywords] = useState(new Set());
+  const { fetchBalance } = useBilling();
 
   const fetchSuggestions = useCallback(async () => {
     if (!campaignId) {
@@ -43,6 +45,7 @@ export function AIKeywordSuggestions({
       });
       setSuggestions(result);
       setSelectedKeywords(new Set());
+      fetchBalance();
     } catch (error) {
       console.error('Error fetching keyword suggestions:', error);
       if (error.response?.status === 503) {
@@ -53,7 +56,7 @@ export function AIKeywordSuggestions({
     } finally {
       setLoading(false);
     }
-  }, [campaignId, industry, productType, businessTypes, existingKeywords]);
+  }, [campaignId, industry, productType, businessTypes, existingKeywords, fetchBalance]);
 
   const toggleKeyword = (keyword) => {
     const newSelected = new Set(selectedKeywords);
@@ -190,6 +193,7 @@ export function AIValuePropSuggestions({
   const [loading, setLoading] = useState(false);
   const [suggestions, setSuggestions] = useState(null);
   const [selectedProps, setSelectedProps] = useState(new Set());
+  const { fetchBalance } = useBilling();
 
   const fetchSuggestions = useCallback(async () => {
     if (!campaignId) {
@@ -208,6 +212,7 @@ export function AIValuePropSuggestions({
       });
       setSuggestions(result);
       setSelectedProps(new Set());
+      fetchBalance();
     } catch (error) {
       console.error('Error fetching value prop suggestions:', error);
       if (error.response?.status === 503) {
@@ -218,7 +223,7 @@ export function AIValuePropSuggestions({
     } finally {
       setLoading(false);
     }
-  }, [campaignId, industry, productName, companyName, businessTypes, painPoints]);
+  }, [campaignId, industry, productName, companyName, businessTypes, painPoints, fetchBalance]);
 
   const toggleProp = (index) => {
     const newSelected = new Set(selectedProps);

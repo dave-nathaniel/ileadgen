@@ -8,6 +8,7 @@ import {
   RobotOutlined,
 } from '@ant-design/icons';
 import { aiApi } from '../../api';
+import { useBilling } from '../../context/BillingContext';
 
 const { Text, Paragraph } = Typography;
 
@@ -32,6 +33,7 @@ export function AITargetProfileSuggestions({
   const [loading, setLoading] = useState(false);
   const [suggestions, setSuggestions] = useState(null);
   const [error, setError] = useState(null);
+  const { fetchBalance } = useBilling();
 
   const fetchSuggestions = useCallback(async () => {
     if (!name) {
@@ -50,6 +52,7 @@ export function AITargetProfileSuggestions({
         product_name: productName,
       });
       setSuggestions(result);
+      fetchBalance();
     } catch (err) {
       console.error('Error fetching target profile suggestions:', err);
       if (err.response?.status === 503) {
@@ -60,7 +63,7 @@ export function AITargetProfileSuggestions({
     } finally {
       setLoading(false);
     }
-  }, [name, description, productType, companyName, productName]);
+  }, [name, description, productType, companyName, productName, fetchBalance]);
 
   useEffect(() => {
     if (autoFetch && name && !suggestions && !loading) {
@@ -242,6 +245,7 @@ export function AIKeywordSuggestionsWizard({
   const [suggestions, setSuggestions] = useState(null);
   const [selectedKeywords, setSelectedKeywords] = useState(new Set());
   const [error, setError] = useState(null);
+  const { fetchBalance } = useBilling();
 
   const fetchSuggestions = useCallback(async () => {
     if (!context.industry && context.business_types?.length === 0) {
@@ -255,6 +259,7 @@ export function AIKeywordSuggestionsWizard({
       const result = await aiApi.suggestDraftKeywords(context, existingKeywords);
       setSuggestions(result);
       setSelectedKeywords(new Set());
+      fetchBalance();
     } catch (err) {
       console.error('Error fetching keyword suggestions:', err);
       if (err.response?.status === 503) {
@@ -265,7 +270,7 @@ export function AIKeywordSuggestionsWizard({
     } finally {
       setLoading(false);
     }
-  }, [context, existingKeywords]);
+  }, [context, existingKeywords, fetchBalance]);
 
   useEffect(() => {
     if (autoFetch && (context.industry || context.business_types?.length > 0) && !suggestions && !loading) {
@@ -421,6 +426,7 @@ export function AISearchQuerySuggestions({
   const [suggestions, setSuggestions] = useState(null);
   const [selectedQueries, setSelectedQueries] = useState(new Set());
   const [error, setError] = useState(null);
+  const { fetchBalance } = useBilling();
 
   const fetchSuggestions = useCallback(async () => {
     if (!context.business_types?.length) {
@@ -434,6 +440,7 @@ export function AISearchQuerySuggestions({
       const result = await aiApi.suggestSearchQueries(context);
       setSuggestions(result);
       setSelectedQueries(new Set());
+      fetchBalance();
     } catch (err) {
       console.error('Error fetching search query suggestions:', err);
       if (err.response?.status === 503) {
@@ -444,7 +451,7 @@ export function AISearchQuerySuggestions({
     } finally {
       setLoading(false);
     }
-  }, [context]);
+  }, [context, fetchBalance]);
 
   useEffect(() => {
     if (autoFetch && context.business_types?.length > 0 && !suggestions && !loading) {
@@ -589,6 +596,7 @@ export function AIValuePropSuggestionsWizard({
   const [suggestions, setSuggestions] = useState(null);
   const [selectedProps, setSelectedProps] = useState(new Set());
   const [error, setError] = useState(null);
+  const { fetchBalance } = useBilling();
 
   const fetchSuggestions = useCallback(async () => {
     if (!context.industry && painPoints.length === 0) {
@@ -602,6 +610,7 @@ export function AIValuePropSuggestionsWizard({
       const result = await aiApi.suggestDraftValueProps(context, painPoints);
       setSuggestions(result);
       setSelectedProps(new Set());
+      fetchBalance();
     } catch (err) {
       console.error('Error fetching value prop suggestions:', err);
       if (err.response?.status === 503) {
@@ -612,7 +621,7 @@ export function AIValuePropSuggestionsWizard({
     } finally {
       setLoading(false);
     }
-  }, [context, painPoints]);
+  }, [context, painPoints, fetchBalance]);
 
   useEffect(() => {
     if (autoFetch && (context.industry || painPoints.length > 0) && !suggestions && !loading) {

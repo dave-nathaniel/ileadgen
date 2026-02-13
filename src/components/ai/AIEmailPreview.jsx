@@ -22,6 +22,7 @@ import {
   CopyOutlined,
 } from '@ant-design/icons';
 import { aiApi } from '../../api';
+import { useBilling } from '../../context/BillingContext';
 
 const { Text, Paragraph, Title } = Typography;
 const { Option } = Select;
@@ -50,6 +51,7 @@ export function AIEmailPreviewModal({
   const [loading, setLoading] = useState(false);
   const [preview, setPreview] = useState(null);
   const [error, setError] = useState(null);
+  const { fetchBalance } = useBilling();
 
   const fetchPreview = useCallback(async () => {
     if (!campaignId || !lead?.id) return;
@@ -65,6 +67,7 @@ export function AIEmailPreviewModal({
         total_steps: 4,
       });
       setPreview(result);
+      fetchBalance();
     } catch (err) {
       console.error('Error fetching email preview:', err);
       if (err.response?.status === 503) {
@@ -75,7 +78,7 @@ export function AIEmailPreviewModal({
     } finally {
       setLoading(false);
     }
-  }, [campaignId, lead?.id, templateType, aiMode, sequenceStep]);
+  }, [campaignId, lead?.id, templateType, aiMode, sequenceStep, fetchBalance]);
 
   const handleCopyToClipboard = () => {
     if (preview) {
@@ -308,6 +311,7 @@ export function LeadAIAnalysis({ campaignId, leadId, leadName }) {
   const [loading, setLoading] = useState(false);
   const [analysis, setAnalysis] = useState(null);
   const [error, setError] = useState(null);
+  const { fetchBalance } = useBilling();
 
   const fetchAnalysis = useCallback(async () => {
     if (!campaignId || !leadId) return;
@@ -320,6 +324,7 @@ export function LeadAIAnalysis({ campaignId, leadId, leadName }) {
         include_rationale: true,
       });
       setAnalysis(result);
+      fetchBalance();
     } catch (err) {
       console.error('Error fetching lead analysis:', err);
       if (err.response?.status === 503) {
@@ -330,7 +335,7 @@ export function LeadAIAnalysis({ campaignId, leadId, leadName }) {
     } finally {
       setLoading(false);
     }
-  }, [campaignId, leadId]);
+  }, [campaignId, leadId, fetchBalance]);
 
   return (
     <Card
